@@ -1,5 +1,5 @@
 /**
- * Draft v0.10.1
+ * Draft v0.10.2
  *
  * Copyright (c) 2013-present, Facebook, Inc.
  * All rights reserved.
@@ -6209,6 +6209,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	var DraftEditor = function (_React$Component) {
 	  _inherits(DraftEditor, _React$Component);
 
+	  /**
+	   * Define proxies that can route events to the current handler.
+	   */
 	  function DraftEditor(props) {
 	    _classCallCheck(this, DraftEditor);
 
@@ -6227,6 +6230,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    _this._onCharacterData = _this._buildHandler('onCharacterData');
 	    _this._onCompositionEnd = _this._buildHandler('onCompositionEnd');
 	    _this._onCompositionStart = _this._buildHandler('onCompositionStart');
+	    _this._onCompositionUpdate = _this._buildHandler('onCompositionUpdate');
 	    _this._onCopy = _this._buildHandler('onCopy');
 	    _this._onCut = _this._buildHandler('onCut');
 	    _this._onDragEnd = _this._buildHandler('onDragEnd');
@@ -6267,11 +6271,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * Build a method that will pass the event to the specified handler method.
 	   * This allows us to look up the correct handler function for the current
 	   * editor mode, if any has been specified.
-	   */
-
-
-	  /**
-	   * Define proxies that can route events to the current handler.
 	   */
 
 
@@ -6356,6 +6355,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            onBlur: this._onBlur,
 	            onCompositionEnd: this._onCompositionEnd,
 	            onCompositionStart: this._onCompositionStart,
+	            onCompositionUpdate: this._onCompositionUpdate,
 	            onCopy: this._onCopy,
 	            onCut: this._onCut,
 	            onDragEnd: this._onDragEnd,
@@ -6633,10 +6633,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	var resolved = false;
 	var stillComposing = false;
+	var compositionUpdates = false;
 	var textInputData = '';
+	var formerTextInputData = '';
 
 	var DraftEditorCompositionHandler = {
 	  onBeforeInput: function onBeforeInput(editor, e) {
+	    if (compositionUpdates) {
+	      // We only want to use the `beforeinput` event if the `compositionupdate`
+	      // one isn't supported. We know that if it is, it fires before
+	      // `beforeinput`.
+	      return;
+	    }
+
 	    textInputData = (textInputData || '') + e.data;
 	  },
 
@@ -6644,8 +6653,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * A `compositionstart` event has fired while we're still in composition
 	   * mode. Continue the current composition session to prevent a re-render.
 	   */
-	  onCompositionStart: function onCompositionStart(editor) {
+	  onCompositionStart: function onCompositionStart(editor, e) {
+	    formerTextInputData = e.data;
 	    stillComposing = true;
+	  },
+
+	  /**
+	   * A `compositionupdate` event has fired. Update the current composition
+	   * session.
+	   */
+	  onCompositionUpdate: function onCompositionUpdate(editor, e) {
+	    compositionUpdates = true;
+	    textInputData = e.data;
 	  },
 
 	  /**
@@ -6728,6 +6747,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var composedChars = textInputData;
 	    textInputData = '';
 
+	    var formerComposedChars = formerTextInputData;
+	    formerTextInputData = '';
+
 	    var editorState = EditorState.set(editor._latestEditorState, {
 	      inCompositionMode: false
 	    });
@@ -6743,10 +6765,22 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    editor.exitCurrentMode();
 
+	    var contentState = editorState.getCurrentContent();
+	    var selection = editorState.getSelection();
+	    if (formerComposedChars && selection.isCollapsed()) {
+	      var anchorOffset = selection.getAnchorOffset() - formerComposedChars.length;
+	      if (anchorOffset < 0) {
+	        anchorOffset = 0;
+	      }
+	      var toRemoveSel = selection.merge({ anchorOffset: anchorOffset });
+	      contentState = DraftModifier.removeRange(editorState.getCurrentContent(), toRemoveSel, 'backward');
+	      selection = contentState.getSelectionAfter();
+	    }
+
 	    if (composedChars) {
 	      // If characters have been composed, re-rendering with the update
 	      // is sufficient to reset the editor.
-	      var contentState = DraftModifier.replaceText(editorState.getCurrentContent(), editorState.getSelection(), composedChars, currentStyle, entityKey);
+	      contentState = DraftModifier.replaceText(contentState, selection, composedChars, currentStyle, entityKey);
 	      editor.update(EditorState.push(editorState, contentState, 'insert-characters'));
 	      return;
 	    }
@@ -9036,6 +9070,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var nullthrows = __webpack_require__(5);
 
 	var isGecko = UserAgent.isEngine('Gecko');
+	var isAndroid = UserAgent.isPlatform('Android');
 
 	var DOUBLE_NEWLINE = '\n\n';
 
@@ -9148,7 +9183,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var anchorOffset, focusOffset, startOffset, endOffset;
 
-	  if (isGecko) {
+	  if (isAndroid || isGecko) {
 	    // Firefox selection does not change while the context menu is open, so
 	    // we preserve the anchor and focus values of the DOM selection.
 	    anchorOffset = domSelection.anchorOffset;
