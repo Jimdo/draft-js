@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule editOnInput
+ * @format
  * @flow
  */
 
@@ -14,13 +15,13 @@
 
 import type DraftEditor from 'DraftEditor.react';
 
-const DraftFeatureFlags = require('DraftFeatureFlags');
 var DraftModifier = require('DraftModifier');
 var DraftOffsetKey = require('DraftOffsetKey');
 var EditorState = require('EditorState');
 var UserAgent = require('UserAgent');
 
 var findAncestorOffsetKey = require('findAncestorOffsetKey');
+const gkx = require('gkx');
 var nullthrows = require('nullthrows');
 
 var isGecko = UserAgent.isEngine('Gecko');
@@ -49,12 +50,12 @@ function editOnInput(editor: DraftEditor): void {
   var domSelection = global.getSelection();
 
   var {anchorNode, isCollapsed} = domSelection;
-  const isNotTextNode =
-    anchorNode.nodeType !== Node.TEXT_NODE;
-  const isNotTextOrElementNode = anchorNode.nodeType !== Node.TEXT_NODE
-    && anchorNode.nodeType !== Node.ELEMENT_NODE;
+  const isNotTextNode = anchorNode.nodeType !== Node.TEXT_NODE;
+  const isNotTextOrElementNode =
+    anchorNode.nodeType !== Node.TEXT_NODE &&
+    anchorNode.nodeType !== Node.ELEMENT_NODE;
 
-  if (DraftFeatureFlags.draft_killswitch_allow_nontextnodes) {
+  if (gkx('draft_killswitch_allow_nontextnodes')) {
     if (isNotTextNode) {
       return;
     }
@@ -178,11 +179,7 @@ function editOnInput(editor: DraftEditor): void {
   });
 
   editor.update(
-    EditorState.push(
-      editorState,
-      contentWithAdjustedDOMSelection,
-      changeType,
-    ),
+    EditorState.push(editorState, contentWithAdjustedDOMSelection, changeType),
   );
 }
 

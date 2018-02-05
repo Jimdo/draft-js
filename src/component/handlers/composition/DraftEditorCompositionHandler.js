@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule DraftEditorCompositionHandler
+ * @format
  * @flow
  */
 
@@ -19,6 +20,8 @@ const EditorState = require('EditorState');
 const Keys = require('Keys');
 
 const getEntityKeyForSelection = require('getEntityKeyForSelection');
+const gkx = require('gkx');
+const isEventHandled = require('isEventHandled');
 const isSelectionAtLeafStart = require('isSelectionAtLeafStart');
 
 /**
@@ -168,12 +171,11 @@ var DraftEditorCompositionHandler = {
       editorState.getSelection(),
     );
 
-    const mustReset = (
+    const mustReset =
       !composedChars ||
       isSelectionAtLeafStart(editorState) ||
       currentStyle.size > 0 ||
-      entityKey !== null
-    );
+      entityKey !== null;
 
     if (mustReset) {
       editor.restoreEditorDOM();
@@ -198,6 +200,15 @@ var DraftEditorCompositionHandler = {
     }
 
     if (composedChars) {
+      if (
+        gkx('draft_handlebeforeinput_composed_text') &&
+        editor.props.handleBeforeInput &&
+        isEventHandled(
+          editor.props.handleBeforeInput(composedChars, editorState),
+        )
+      ) {
+        return;
+      }
       // If characters have been composed, re-rendering with the update
       // is sufficient to reset the editor.
       contentState = DraftModifier.replaceText(
@@ -208,11 +219,7 @@ var DraftEditorCompositionHandler = {
         entityKey,
       );
       editor.update(
-        EditorState.push(
-          editorState,
-          contentState,
-          'insert-characters',
-        ),
+        EditorState.push(editorState, contentState, 'insert-characters'),
       );
       return;
     }

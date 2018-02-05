@@ -7,7 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule DraftModifier
- * @typechecks
+ * @format
  * @flow
  */
 
@@ -23,12 +23,12 @@ import type {Map} from 'immutable';
 
 var CharacterMetadata = require('CharacterMetadata');
 var ContentStateInlineStyle = require('ContentStateInlineStyle');
-const DraftFeatureFlags = require('DraftFeatureFlags');
 var Immutable = require('immutable');
 
 var applyEntityToContentState = require('applyEntityToContentState');
 var getCharacterRemovalRange = require('getCharacterRemovalRange');
 var getContentStateFragment = require('getContentStateFragment');
+var gkx = require('gkx');
 var insertFragmentIntoContentState = require('insertFragmentIntoContentState');
 var insertTextIntoContentState = require('insertTextIntoContentState');
 var invariant = require('invariant');
@@ -122,10 +122,7 @@ var DraftModifier = {
     fragment: BlockMap,
   ): ContentState {
     var withoutEntities = removeEntitiesAtEdges(contentState, targetRange);
-    var withoutText = removeRangeFromContentState(
-      withoutEntities,
-      targetRange,
-    );
+    var withoutText = removeRangeFromContentState(withoutEntities, targetRange);
 
     return insertFragmentIntoContentState(
       withoutText,
@@ -174,7 +171,7 @@ var DraftModifier = {
       }
     }
     let adjustedRemovalRange = rangeToRemove;
-    if (DraftFeatureFlags.draft_segmented_entities_behavior) {
+    if (gkx('draft_segmented_entities_behavior')) {
       // Adjust the selection to properly delete segemented and immutable
       // entities
       adjustedRemovalRange = getCharacterRemovalRange(
@@ -238,10 +235,8 @@ var DraftModifier = {
     selectionState: SelectionState,
     blockType: DraftBlockType,
   ): ContentState {
-    return modifyBlockForContentState(
-      contentState,
-      selectionState,
-      (block) => block.merge({type: blockType, depth: 0}),
+    return modifyBlockForContentState(contentState, selectionState, block =>
+      block.merge({type: blockType, depth: 0}),
     );
   },
 
@@ -250,10 +245,8 @@ var DraftModifier = {
     selectionState: SelectionState,
     blockData: Map<any, any>,
   ): ContentState {
-    return modifyBlockForContentState(
-      contentState,
-      selectionState,
-      (block) => block.merge({data: blockData}),
+    return modifyBlockForContentState(contentState, selectionState, block =>
+      block.merge({data: blockData}),
     );
   },
 
@@ -262,13 +255,10 @@ var DraftModifier = {
     selectionState: SelectionState,
     blockData: Map<any, any>,
   ): ContentState {
-    return modifyBlockForContentState(
-      contentState,
-      selectionState,
-      (block) => block.merge({data: block.getData().merge(blockData)}),
+    return modifyBlockForContentState(contentState, selectionState, block =>
+      block.merge({data: block.getData().merge(blockData)}),
     );
   },
-
 
   applyEntity: function(
     contentState: ContentState,

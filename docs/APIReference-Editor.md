@@ -77,6 +77,16 @@ Optionally set a function to define custom block rendering. See
 [Advanced Topics: Block Components](/docs/advanced-topics-block-components.html)
 for details on usage.
 
+#### blockRendererMap
+```
+blockRendererMap?: DraftBlockRenderMap
+```
+Provide a map of block rendering configurations. Each block type maps to
+element tag and an optional react element wrapper. This configuration
+is used for both rendering and paste processing. See
+[Advanced Topics: Custom Block Rendering](https://draftjs.org/docs/advanced-topics-custom-block-render-map.html)
+for details on usage.
+
 #### blockStyleFn
 ```
 blockStyleFn?: (block: ContentBlock) => string
@@ -105,6 +115,31 @@ to spans of text. See
 for details on usage.
 
 ### Behavior (Optional)
+
+### autoCapitalize?: string
+
+```
+autoCapitalize?: string
+```
+
+Set if auto capitalization is turned on and how it behaves. More about platform availability and usage can [be found on mdn](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/Input#attr-autocapitalize).
+
+### autoComplete?: string
+
+```
+autoComplete?: string
+```
+
+Set if auto complete is turned on and how it behaves. More about platform availability and usage can [be found on mdn](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/Input#attr-autocomplete).
+
+### autoCorrect?: string
+
+```
+autoCorrect?: string
+```
+
+Set if auto correct is turned on and how it behaves. More about platform availability and usage can [be found on mdn](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/Input#attr-autocorrect).
+
 
 #### readOnly
 ```
@@ -227,28 +262,23 @@ Handle other drop operations.
 
 ### Key Handlers (Optional)
 
-These prop functions expose common useful key events. Example: At Facebook, these are
-used to provide keyboard interaction for mention results in inputs.
+Draft lets you supply a custom `keyDown` handler that wraps or overrides its
+default one.
 
-#### onEscape
-```
-onEscape?: (e: SyntheticKeyboardEvent) => void
-```
+#### keyBindingFn
 
-#### onTab
 ```
-onTab?: (e: SyntheticKeyboardEvent) => void
+keyBindingFn?: (e: SyntheticKeyboardEvent) => ?string
 ```
 
-#### onUpArrow
-```
-onUpArrow?: (e: SyntheticKeyboardEvent) => void
-```
+This prop function exposes `keyDown` events to a handler of your choosing. If an
+event of interest happens, you can perform custom logic and/or return a string
+corresponding to a `DraftEditorCommand` or a custom editor command of your
+own creation. Example: At Facebook, this is used to provide keyboard interaction
+for the mentions autocomplete menu that appears when typing a friend's name.
+You can find a more detailed explanation of this
+[here](/docs/advanced-topics-key-bindings.html).
 
-#### onDownArrow
-```
-onDownArrow?: (e: SyntheticKeyboardEvent) => void
-```
 ### Mouse events
 
 ### onFocus
