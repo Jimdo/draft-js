@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule DraftEditorCompositionHandler
+ * @format
  * @flow
  */
 
@@ -19,6 +20,8 @@ const EditorState = require('./EditorState');
 const Keys = require('fbjs/lib/Keys');
 
 const getEntityKeyForSelection = require('./getEntityKeyForSelection');
+const gkx = require('./gkx');
+const isEventHandled = require('./isEventHandled');
 const isSelectionAtLeafStart = require('./isSelectionAtLeafStart');
 
 /**
@@ -186,6 +189,9 @@ var DraftEditorCompositionHandler = {
     }
 
     if (composedChars) {
+      if (gkx('draft_handlebeforeinput_composed_text') && editor.props.handleBeforeInput && isEventHandled(editor.props.handleBeforeInput(composedChars, editorState))) {
+        return;
+      }
       // If characters have been composed, re-rendering with the update
       // is sufficient to reset the editor.
       contentState = DraftModifier.replaceText(contentState, selection, composedChars, currentStyle, entityKey);
