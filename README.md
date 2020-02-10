@@ -1,6 +1,6 @@
 # [Draft.js](http://draftjs.org/) [![Build Status](https://img.shields.io/travis/facebook/draft-js/master.svg?style=flat)](https://travis-ci.org/facebook/draft-js) [![npm version](https://img.shields.io/npm/v/draft-js.svg?style=flat)](https://yarn.pm/draft-js)
 
-Forked from fork from [facebook/draft-js](https://github.com/facebook/draft-js) for unknown reasons. Used in `cms-frontend` patternLib (deprecated). Removed from cms-frontend in [PR #5077](https://github.com/Jimdo/cms-frontend/pull/5077).
+Forked from fork from [facebook/draft-js](https://github.com/facebook/draft-js) for unknown reasons. Used in `cms-frontend` patternLib (deprecated). Removed from cms-frontend in [PR #5077](https://github.com/Jimdo/cms-frontend/pull/5077) since unused.
 
 ---
 
